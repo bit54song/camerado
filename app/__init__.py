@@ -1,0 +1,2 @@
+from .camerado import CameradoApplication
+
