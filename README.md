@@ -23,7 +23,7 @@ On the right panel, there are three groups of controls. The *Device* group conta
 
 ![](../assets/settings_1.png?raw=true)
 
-The settings controls are discovered using `v4l2-ctl` utility for the current video device dynamically. Some of the controls are dependent on the other ones and maybe not rendered as they are not available in the current state. For example, when user turns off the auto mode for exposure and white balance, the corresponded controls will show up after the *Update Controls* button is pressed:
+The settings controls are discovered using `v4l2-ctl` utility for the current video device dynamically. Some of the controls are dependent on the other ones and may not be rendered as they are not available in the current state. For example, when user turns off the auto mode for exposure and white balance, the corresponded controls will show up after the *Update Controls* button has been pressed:
 
 ![](../assets/settings_2.png?raw=true)
 

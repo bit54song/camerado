@@ -157,9 +157,9 @@ class CameradoApplication(tk.Tk):
     def update_canvas(self):
 
         if self.stream is not None:
+            size = self.current_canvas_size()
 
             with self.stream_lock:
-                size = self.current_canvas_size()
                 frame = self.stream.read(size)
 
             if frame is not None:
@@ -168,8 +168,8 @@ class CameradoApplication(tk.Tk):
                 self.canvas.create_image(0, 0, image=self.photo, anchor='nw')
 
                 width, height = self.stream.size
-                self.canvas.create_text(15, 15, fill='yellow',
-                    font='Helvetica 10', anchor='w',
+                self.canvas.create_text(
+                    15, 15, fill='yellow', font='Helvetica 10', anchor='w',
                     text='Res. {w}x{h}'.format(w=width, h=height))
 
                 self.draw_roi_boxes()
@@ -252,7 +252,6 @@ class CameradoApplication(tk.Tk):
             return
 
         with self.roi_lock:
-
             roi = [roi for roi in self.roi_list if roi]
             self.roi_list = [None] * self.MAX_ROI
 
@@ -320,7 +319,6 @@ class CameradoApplication(tk.Tk):
 
         w, h = res.split('x')
         size = (int(w), int(h))
-
         self.create_stream(self.stream.path, size)
 
     def create_stream(self, path, size):
