@@ -39,9 +39,9 @@ class VideoStreamFetcher(Thread):
     def run(self):
 
         while not self._stop_event.is_set():
-            frame = self._stream.read()
 
             with self._frame_lock:
+                frame = self._stream.read()
                 self._frame = frame
 
     def stop(self, timeout=None):
