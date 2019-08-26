@@ -1,4 +1,5 @@
 from .stream import VideoStream
-from .fetcher import VideoStreamFetcher
+from .thread import VideoStreamThread
+from .counter import VideoFrameCounter
 from .settings import VideoDeviceSettings
 

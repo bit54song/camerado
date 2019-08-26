@@ -24,7 +24,7 @@ class VideoFrameCounter(object):
         self.fps = {}
 
         for name, frames in self.stream.items():
-            self.fps[name] = frames / t_elapsed
+            self.fps[name] = round(frames / t_elapsed, 2)
 
         self.stream = None
 

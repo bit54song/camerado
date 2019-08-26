@@ -16,6 +16,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        print('Unexpected error: {}'.format(e), file=sys.stderr)
+        print('Unexpected error:', e, file=sys.stderr)
         sys.exit(1)
 

@@ -21,7 +21,7 @@ class CameradoApplication(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title('Camera Setup Application')
+        self.title('Camerado')
 
         self.device_settings_frame = None
         self.device_path = tk.StringVar(self, value='')
@@ -252,6 +252,7 @@ class CameradoApplication(tk.Tk):
             return
 
         with self.roi_lock:
+
             roi = [roi for roi in self.roi_list if roi]
             self.roi_list = [None] * self.MAX_ROI
 
@@ -319,6 +320,7 @@ class CameradoApplication(tk.Tk):
 
         w, h = res.split('x')
         size = (int(w), int(h))
+
         self.create_stream(self.stream.path, size)
 
     def create_stream(self, path, size):

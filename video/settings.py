@@ -1,13 +1,17 @@
 import re
-from pathlib import Path
+import glob
+import logging
 from subprocess import Popen, TimeoutExpired, PIPE
 
+from .exceptions import SettingsError
 
-class VideoDeviceSettings():
 
-    def __init__(self, dev='/dev/video0', timeout=None):
+class VideoDeviceSettings(object):
+
+    def __init__(self, dev='/dev/video0', timeout=None, logger=None):
         self.dev = dev
         self.timeout = timeout
+        self.logger = logger or logging.getLogger()
 
     def get(self):
 
@@ -15,7 +19,7 @@ class VideoDeviceSettings():
             set_str = self._exec_shell(['v4l2-ctl', '-d', self.dev, '-L'])
             set_list = self._str_to_list(set_str)
         except:
-            raise RuntimeError('Failed to get device settings.')
+            raise SettingsError('Failed to get device settings.')
 
         return set_list
 
@@ -25,7 +29,7 @@ class VideoDeviceSettings():
             formats = self._exec_shell(
                 ['v4l2-ctl', '-d', self.dev, '--list-formats-ext'])
         except:
-            raise RuntimeError('Failed to get device resolutions.')
+            raise SettingsError('Failed to get device resolutions.')
 
         str_list = re.findall(r'\s(\d+x\d+)', formats)
         str_list = list(set(str_list))
@@ -68,19 +72,22 @@ class VideoDeviceSettings():
             else:
                 other_sets.append(s_entry)
 
-        print('>> Device: {path}'.format(path=self.dev))
         # The order does matter. First apply bool settings, then menu settings,
         # and finally the other ones:
+        for vals in (bool_sets, menu_sets, other_sets):
 
-        for sets in (bool_sets, menu_sets, other_sets):
-
-            if not sets:
+            if not vals:
                 continue
 
-            set_str = self._list_to_str(sets)
-            print('!! Apply video settings: {s}'.format(s=set_str), flush=True)
+            s_str = self._vals_to_str(vals)
+            self.logger.info('{d} :: {s}'.format(d=self.dev, s=s_str))
+            self._exec_shell(['v4l2-ctl', '-d', self.dev, '--set-ctrl', s_str])
 
-            self._exec_shell(['v4l2-ctl', '-d', self.dev, '--set-ctrl', set_str])
+    def exposure_manual(self):
+
+        # This is a hack. It turns the exposure into manual mode:
+        for val in ('3', '1'):
+            self.set([{'name': 'exposure_auto', 'value': val}])
 
     def _exec_shell(self, args):
 
@@ -93,7 +100,7 @@ class VideoDeviceSettings():
             raise
 
         if errs:
-            raise RuntimeError(errs.decode('utf-8'))
+            raise SettingsError(errs.decode('utf-8'))
 
         return outs.decode('utf-8') or None
 
@@ -120,12 +127,10 @@ class VideoDeviceSettings():
                     continue
 
                 name, param_type = name_type[0]
-
                 param_entry = {
                     'name': name,
                     'type': param_type,
                 }
-
                 params = re.findall(r'(\w+)=(\S+)', line)
 
                 for name, val in params:
@@ -139,12 +144,12 @@ class VideoDeviceSettings():
 
         return sorted(set_list, key=lambda x: x['name'])
 
-    def _list_to_str(self, set_list):
-        toks = ['{n}={v}'.format(n=s['name'], v=s['value']) for s in set_list]
+    def _vals_to_str(self, settings):
+        toks = ['{n}={v}'.format(n=s['name'], v=s['value']) for s in settings]
 
         return ','.join(toks)
 
     @staticmethod
     def device_list():
-        return sorted([str(dev) for dev in Path('/dev').glob('video*')])
+        return sorted(glob.glob('/dev/video*'))
 
