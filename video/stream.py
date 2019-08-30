@@ -1,11 +1,14 @@
+import time
+
 import cv2
 
 
 class VideoStream(object):
 
-    def __init__(self, path='/dev/video0', size=(640, 480)):
+    def __init__(self, path='/dev/video0', size=(640, 480), fps=None):
         self.path = path
         self.size = size
+        self.fps = fps
         self.cap = self._capture_stream()
 
     def __del__(self):
@@ -22,14 +25,44 @@ class VideoStream(object):
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
 
         return cap
 
-    def read(self, size=None):
-        recv, frame = self.cap.read()
+    def grab(self):
+        return self.cap.grab()
 
-        if not recv:
+    def retrieve(self):
+        success, frame = self.cap.retrieve()
+
+        if not success:
             return
+
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    def read(self, size=None, timeout=None):
+        t_start = time.time()
+
+        while True:
+            t_fetch_start = time.time()
+            success, frame = self.cap.read()
+            t_elapsed = time.time() - t_start
+
+            if timeout and t_elapsed > timeout:
+                raise TimeoutError('Failed to read from {p}, timeout {t:.5f} '
+                                   'exceeded!'.format(p=self.path, t=timeout))
+
+            if not success:
+                continue
+
+            if self.fps is not None:
+                t_fetch_elapsed = time.time() - t_fetch_start
+
+                if t_fetch_elapsed < 0.25 / self.fps:
+                    # It seems this is a buffered frame, try fetching again...
+                    continue
+
+            break
 
         if size is not None:
             frame = cv2.resize(frame, size)
